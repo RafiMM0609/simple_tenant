@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: indo-ingress
+  namespace: dev
+spec:
+  rules:
+  - host: indoma.solutiontech.id
+    http:
+      paths:
+      - backend:
+          service:
+            name: indo-service
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
