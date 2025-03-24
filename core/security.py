@@ -34,7 +34,7 @@ async def generate_jwt_token_from_user(
         expire = expire.astimezone(timezone(TZ))
     payload = {
         "id": str(user['id']),
-        "username": user['email'],
+        "username": user['username'],
         "email": user['email'],
         "exp": expire,
     }

@@ -56,7 +56,6 @@ async def login(
         return common_response(
             Ok(
                 data={
-                    "id": "rahasia",
                     "email": request.email,
                     "is_active": True,
                     "role": {
@@ -209,7 +208,6 @@ async def list_user(
                         {
                             "email": x["email"],
                             "username": x["username"],
-                            "full_name": x["full_name"],
                             "phone_number": x["phone_number"],
                         } for x in data
                     ]
