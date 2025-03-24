@@ -58,10 +58,6 @@ async def login(
                 data={
                     "email": request.email,
                     "is_active": True,
-                    "role": {
-                        "nama": "admin",
-                        "id": 1
-                    },
                     "token": token
                 }
             )

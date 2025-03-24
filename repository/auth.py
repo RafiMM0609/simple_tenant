@@ -15,10 +15,18 @@ async def login(
     db:any,
     request: LoginRequest,
 ):
-    data = db.table("users").select("*").execute()
-    user_data =  data.data[0]
-    if request.password == user_data["password"]:
-        return data.data[0]
+    response = (
+        db.table("users")
+        .select("*")
+        .or_("username.eq.{},email.eq.{}".format(request.email, request.email))
+        .eq("id_role", 999)
+        .execute()
+    )
+    print("response\n",response)
+    user_data = response.data[0]
+    print(generate_hash_password(request.password))
+    if generate_hash_password(request.password) == user_data["password"]:
+        return user_data
     else:
         raise ValueError("Invalid credentical")
     
@@ -56,9 +64,9 @@ async def regis(
 ):
     if check_exist_user(db, request.email, request.username):
         raise ValueError("User already exist")
-    request.password = generate_hash_password(request.password)
+    # request.password = generate_hash_password(request.password)
     insert_data = request.dict()
-    insert_data["id_role"] = 1
+    insert_data["id_role"] = 999
     try:
         response = (
             db.table("users")
