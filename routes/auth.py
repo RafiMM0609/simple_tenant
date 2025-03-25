@@ -107,7 +107,7 @@ async def me(
         token: str = Depends(oauth2_scheme)
         ):
     try:        
-        request_user = get_user_from_jwt_token(model='user',db=db, jwt_token=token)
+        request_user = get_user_from_jwt_token(model='user_tenant',db=db, jwt_token=token)
         if request_user == None:
             return common_response(Unauthorized(message="Invalid/Expired token"))
         # db = request.state.db
@@ -115,7 +115,7 @@ async def me(
         return common_response(
             Ok(
                 data={
-                    "id": str(request_user['id']),
+                    "id": str(request_user['user_id']),
                     "email": request_user['email'],
                     "username": request_user['username'],
                 }

@@ -3,7 +3,6 @@ name = "auth-service"
 version = "0.1.0"
 description = "pdp patuh auth service"
 authors = ["pdp patuh"]
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"

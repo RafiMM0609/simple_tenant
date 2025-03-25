@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  tenant-auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8050:8050"
+    environment:
+      ENV: production
+    volumes:
+      - .:/app
