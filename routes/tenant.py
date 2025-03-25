@@ -1,3 +1,4 @@
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Request, BackgroundTasks, UploadFile, File, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from supabase import Client
@@ -29,6 +30,7 @@ from schemas.tenant import (
     RegisTenantRequest,
     EditTenantRequest,
     ListDataTenantResponse,
+    DataUserDirResponse,
 )
 import repository.tenant  as tenantRepo
 router = APIRouter(tags=["Tenant"])
@@ -81,6 +83,46 @@ async def get_list_router(
             Ok(
                 message="Sucess add data",
                 data=data,
+            )
+        )
+    except Exception as e:
+        return common_response(BadRequest(message=str(e)))
+    
+@router.get(
+    "/list-user",
+    responses={
+        "200": {"model": DataUserDirResponse},
+        "400": {"model": BadRequestResponse},
+        "500": {"model": InternalServerErrorResponse},
+    },
+)
+async def get_list_router(
+    db: Client = Depends(get_supabase),
+    token: str = Depends(oauth2_scheme),
+    tenant_code: Optional[str] = None,
+    src: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 10,
+):
+    try:
+        user = get_user_from_jwt_token(db, "user_tenant",token)
+        if not user:
+            return common_response(Unauthorized())
+        data, total_count, total_pages = await tenantRepo.get_list_user_dir(
+            db=db,
+            tenant_code=tenant_code,
+            src=src,
+            )
+        return common_response(
+            Ok(
+                message="Sucess add data",
+                data=data,
+                meta={
+                    "count": total_count,
+                    "page_count": total_pages,
+                    "page_size": page_size,
+                    "page": page,
+                }
             )
         )
     except Exception as e:

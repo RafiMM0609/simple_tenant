@@ -81,10 +81,20 @@ class DataUserMappingResponse(BaseModel):
 
 
 class DataUserDir(BaseModel):
-    username:str
+    userid:int
     email:str
     phone:str
+    username:str
+    id_tenant:Optional[str]=None
     tenant_name:str
+    tenant_code:str
     created_at:str="08/11/2025"
-    updated_at:str="29/12/2025"
+    updated_at:Optional[str]=None
 
+
+class DataUserDirResponse(BaseModel):
+    meta: MetaResponse
+    data: DataUserDir
+    status: str
+    code: int
+    message: str

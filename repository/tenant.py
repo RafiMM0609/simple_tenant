@@ -11,54 +11,100 @@ from schemas.tenant import (
 from core.security import (
     generate_hash_password,
 )
+from datetime import datetime
 
 async def get_list_user_dir(
-    db:any,
+    db: any,
     tenant_code: Optional[str] = None,
     src: Optional[str] = None,
-)->List[DataUserDir]:
+    page: int = 1,
+    page_size: int = 10,
+) -> List[DataUserDir]:
     try:
+        # Calculate offset for pagination
+        offset = (page - 1) * page_size
+
         # Get connection to the database with users table
         user_db = get_supabase_pdp()
-        
-        # Initialize query to fetch users
-        user_query = user_db.table("users").select("id, email, username")
-        
+
+        # Initialize query to fetch users with pagination
+        user_query = (
+            user_db.table("users")
+            .select("userid, email, username, created_at, last_attempt, phone")
+            # .range(offset, offset + page_size - 1)  # Apply pagination here
+            .range(1, 11)  # Apply pagination here
+        )
+
         # Get user_tenant relationships
-        user_tenant_query = user_db.table("user_tenant").select("id_user, tenant_id")
-        
+        user_tenant_query = db.table("tenantusermapping").select("id_user, id_tenant")
+
         # Get tenants, with optional filter by tenant_code
-        tenant_query = db.table("tenants").select("id, tenant_name, tenant_code, subdomain")
+        tenant_query = db.table("tenants").select("id_tenant, tenant_name, tenant_code, subdomain")
         if tenant_code:
             tenant_query = tenant_query.eq("tenant_code", tenant_code)
-            
+
         # Execute all queries
         users = user_query.execute().data
         user_tenants = user_tenant_query.execute().data
         tenants = tenant_query.execute().data
-        
+
         # Perform the join in Python
         result = []
         for ut in user_tenants:
             # Find matching user
-            user = next((u for u in users if u["id"] == ut["id_user"]), None)
+            user = next((u for u in users if u["userid"] == ut["id_user"]), None)
             # Find matching tenant
-            tenant = next((t for t in tenants if t["id"] == ut["tenant_id"]), None)
-            
+            tenant = next((t for t in tenants if t["id_tenant"] == ut["id_tenant"]), None)
+
             if user and tenant:
                 # Create a combined record
+                created_at = user["created_at"]
+                updated_at = user["last_attempt"]
+
+                # Parse and format dates if they exist
+                if created_at and isinstance(created_at, str):
+                    try:
+                        created_at = datetime.strptime(created_at.split("T")[0], "%Y-%m-%d").strftime("%d/%m/%Y")
+                    except Exception:
+                        pass
+
+                if updated_at and isinstance(updated_at, str):
+                    try:
+                        updated_at = datetime.strptime(updated_at.split("T")[0], "%Y-%m-%d").strftime("%d/%m/%Y")
+                    except Exception:
+                        pass
+
                 user_dir = {
-                    "user_id": user["id"],
+                    "userid": user["userid"],
                     "email": user["email"],
+                    "phone": user["phone"],
                     "username": user["username"],
-                    "tenant_id": tenant["id"],
+                    "id_tenant": tenant["id_tenant"],
                     "tenant_name": tenant["tenant_name"],
                     "tenant_code": tenant["tenant_code"],
-                    "subdomain": tenant["subdomain"]
+                    "created_at": created_at,
+                    "updated_at": updated_at,
                 }
-                result.append(DataUserDir(**user_dir))
-                
-        return result
+                result.append(DataUserDir(**user_dir).dict())
+
+        # Get total count of users for pagination info
+        total_count_query = user_db.table("users").select("count", count="exact").execute()
+        total_count = total_count_query.count if hasattr(total_count_query, 'count') else 0
+        
+        # Calculate total pages
+        total_pages = (total_count + page_size - 1) // page_size if total_count > 0 else 0
+        
+        # Return results with pagination metadata
+        # return {
+        #     "data": result,
+        #     "pagination": {
+        #     "page": page,
+        #     "page_size": page_size,
+        #     "total_count": total_count,
+        #     "total_pages": total_pages
+        #     }
+        # }
+        return result, total_count, total_pages
     except Exception as e:
         print(f"Error retrieving user directories: {e}")
         raise ValueError("Failed to retrieve user directories. Please try again.")
