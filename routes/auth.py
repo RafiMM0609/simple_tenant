@@ -140,19 +140,11 @@ async def regis(
     db: Client = Depends(get_supabase)
 ):
     try:
-        # errors = UserRegisValidator().validate(request.dict())
-        # errors_list = [key for key in errors.keys()]
-        # if errors != {}:
-        #     # return common_response(BadRequest(custom_response=errors))
-        #     return common_response(BadRequest(message=f"Data that you sent is not valid! please check this field {errors_list}"))
-
         data = await authRepo.regis(db=db,request=request)
         
         return common_response(
             Ok(
-                data={
-                    "data": "Success"
-                }
+                message="Success add data"
             )
         )
     except Exception as e:
@@ -213,7 +205,7 @@ async def list_user(
                         {
                             "email": x["email"],
                             "username": x["username"],
-                            "phone_number": x["phone_number"],
+                            "phone": x["phone"],
                         } for x in data
                     ]
                 }

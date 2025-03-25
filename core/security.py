@@ -11,8 +11,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 def generate_hash_password(password: str) -> str:
-    hash = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())
-    return hash.decode()
+    print("Input password:", password)
+    
+    salt = bcrypt.gensalt()
+    print("Generated salt:", salt)
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    print("Hashed password:", hashed_password)
+    
+    return hashed_password.decode('utf-8')
 
 def generate_hash_lisensi(lisensi: str) -> str:
     hash = bcrypt.hashpw(str.encode(lisensi), bcrypt.gensalt())
@@ -33,7 +39,7 @@ async def generate_jwt_token_from_user(
     if ignore_timezone == False:
         expire = expire.astimezone(timezone(TZ))
     payload = {
-        "id": str(user['id']),
+        "user_id": str(user['user_id']),
         "username": user['username'],
         "email": user['email'],
         "exp": expire,

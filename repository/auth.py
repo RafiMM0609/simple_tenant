@@ -7,6 +7,7 @@ from schemas.auth import (
 )
 from core.security import (
     generate_hash_password,
+    validated_user_password
 )
 from datetime import datetime
 
@@ -17,19 +18,23 @@ async def login(
     request: LoginRequest,
 ):
     response = (
-        db.table("users")
+        db.table("user_tenant")
         .select("*")
         .or_("username.eq.{},email.eq.{}".format(request.email, request.email))
-        .eq("id_role", 999)
         .execute()
     )
     print("response\n",response)
     user_data = response.data[0]
-    print(generate_hash_password(request.password))
-    if generate_hash_password(request.password) == user_data["password"]:
+    
+    # Debug logs for hash comparison
+    generated_hash = validated_user_password(
+        user_data["password"],
+        request.password
+    )
+    if generated_hash:
         return user_data
     else:
-        raise ValueError("Invalid credentical")
+        raise ValueError("Invalid credentials")
     
 async def get_id_tenant(
     db:any,
@@ -98,16 +103,20 @@ async def regis(
 ):
     if check_exist_user(db, request.email, request.username):
         raise ValueError("User already exist")
-    # request.password = generate_hash_password(request.password)
+    
+    # Hash the password and log it
+    request.password = generate_hash_password(request.password)
+    print("Hashed password during registration:", request.password)
+    
     insert_data = request.dict()
     try:
         response = (
             db.table("user_tenant")
             .insert(insert_data)
             .execute()
-            )
+        )
         return "Success"
-    except Exception  as e:
+    except Exception as e:
         raise ValueError(str(e))
     
 async def edit_password(
@@ -136,7 +145,7 @@ async def list_user(
     try:
         start = (page - 1) * page_size 
         end = start + page_size - 1 
-        response = db.table("users").select("*").range(start, end).execute()
+        response = db.table("user_tenant").select("*").range(start, end).execute()
         count = len(response.data)
         return response.data, count
     except Exception as e:
