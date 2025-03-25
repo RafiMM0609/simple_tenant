@@ -35,6 +35,8 @@ from schemas.auth import (
     ListUserRequest
 )
 import repository.auth  as authRepo
+from urllib.parse import urlparse
+
 router = APIRouter(tags=["Auth"])
 
 
@@ -46,19 +48,26 @@ router = APIRouter(tags=["Auth"])
         "500": {"model": InternalServerErrorResponse},
     },
 )
-async def login(
+async def login_route(
     request: LoginRequest, 
-    db: Client = Depends(get_supabase)
+    db: Client = Depends(get_supabase),
+    req: Request = None  # Add Request dependency
 ):
     try:
-        data = await authRepo.login(db=db,request=request)
+        # Extract subdomain from the Host header
+        host = req.headers.get("host", "")
+        subdomain = host.split(".")[0] if host else "unknown"
+        print(f"Subdomain: {subdomain}")  # Log the subdomain
+        
+        data = await authRepo.login(db=db, request=request, subdomain=subdomain)
         token = await generate_jwt_token_from_user(user=data)
         return common_response(
             Ok(
                 data={
                     "email": request.email,
                     "is_active": True,
-                    "token": token
+                    "token": token,
+                    "subdomain": subdomain  # Optionally include subdomain in response
                 }
             )
         )

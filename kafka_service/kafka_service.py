@@ -15,7 +15,7 @@ from schemas.auth import (
     ListUserRequest,
     )
 from routes.auth import (
-    login,
+    login_route,
     regis,
     edit_password,
     list_user,
@@ -34,7 +34,7 @@ class AuthEvent(BaseModel):
     timestamp: str
 
 function_dict = {
-    "login": login,
+    "login": login_route,
     "regis": regis,
     "edit-password": edit_password,
     "list-user": list_user,
@@ -113,7 +113,7 @@ async def consumer_events(
 async def auth_events(
     pdymodel= any,
     pdyparam = any,
-    function = login,
+    function = login_route,
     event_type = str,
 ):
     await consumer_events(pdymodel, function, event_type, pdyparam)

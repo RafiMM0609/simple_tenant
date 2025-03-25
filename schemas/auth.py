@@ -59,12 +59,11 @@ class MeSuccess(BaseModel):
     signature_path: Optional[str]
 
 class SignupRequest(BaseModel):
-    name:str
-    username:str
     email:str
     phone:str
     password:str
-    picture:Optional[str]=None
+    username:str
+    # picture:Optional[str]=None
 
 class MeSuccessResponse(BaseModel):
     meta: MetaResponse

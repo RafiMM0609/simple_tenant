@@ -13,6 +13,7 @@ from datetime import datetime
 
 async def login(
     db:any,
+    subdomain:str,
     request: LoginRequest,
 ):
     response = (
@@ -29,6 +30,39 @@ async def login(
         return user_data
     else:
         raise ValueError("Invalid credentical")
+    
+async def get_id_tenant(
+    db:any,
+    subdomain:str,
+):
+    try:
+        response = (
+            db.table("tenant")
+            .select("id")
+            .eq("subdomain", subdomain)
+            .execute()
+        )
+        return response.data[0]["id"]
+    except Exception as e:
+        print("Error get_id_tenant",e)
+        raise ValueError(str(e))
+
+async def get_list_emp_id(
+    db:any,
+    subdomain:str,
+    id_tenant:str,
+):
+    try:
+        response = (
+            db.table("tenantusermapping")
+            .select("id_user")
+            .eq("id_tenant", id_tenant)
+            .execute()
+        )
+        return response.data
+    except Exception as e:
+        print("Error get_list_emp_id",e)
+        raise ValueError(str(e))
     
 def check_user_password(
     db:any,
@@ -48,8 +82,8 @@ def check_exist_user(
 ):
     try:
         response = (
-            db.table("users")
-            .select("id")
+            db.table("user_tenant")
+            .select("user_id")
             .or_("email.eq.{}, username.eq.{}".format(email, username))
             .execute()
         )
@@ -66,10 +100,9 @@ async def regis(
         raise ValueError("User already exist")
     # request.password = generate_hash_password(request.password)
     insert_data = request.dict()
-    insert_data["id_role"] = 999
     try:
         response = (
-            db.table("users")
+            db.table("user_tenant")
             .insert(insert_data)
             .execute()
             )

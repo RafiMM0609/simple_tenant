@@ -16,7 +16,8 @@ def get_supabase() -> Client:
         options=ClientOptions(
             postgrest_client_timeout=10,
             storage_client_timeout=10,
-            schema="development",
+            # schema="development",
+            schema="multitenancy",
         )
     )
     # client.postgrest.schema = "development"  # Set schema to 'development'
