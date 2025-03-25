@@ -23,6 +23,23 @@ def get_supabase() -> Client:
     # client.postgrest.schema = "development"  # Set schema to 'development'
     return client
 
+def get_supabase_pdp() -> Client:
+    supabase_url: str = SUPABASE_URL
+    supabase_key: str = SUPABASE_KEY
+    # client = create_client(supabase_url, supabase_key)
+    client = create_client(
+        SUPABASE_URL, 
+        SUPABASE_KEY,
+        options=ClientOptions(
+            postgrest_client_timeout=10,
+            storage_client_timeout=10,
+            schema="development",
+            # schema="multitenancy",
+        )
+    )
+    # client.postgrest.schema = "development"  # Set schema to 'development'
+    return client
+
 # def get_postgres_connection() -> connection:
 #     """
 #     Connect to the PostgreSQL database directly using psycopg2.

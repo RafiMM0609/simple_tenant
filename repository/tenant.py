@@ -1,15 +1,67 @@
 from typing import List, Optional
 import yaml
 import os
-
+from models import get_supabase_pdp
 from schemas.tenant import (
     RegisTenantRequest,
     EditTenantRequest,
     DataTenant,
+    DataUserDir,
 )
 from core.security import (
     generate_hash_password,
 )
+
+async def get_list_user_dir(
+    db:any,
+    tenant_code: Optional[str] = None,
+    src: Optional[str] = None,
+)->List[DataUserDir]:
+    try:
+        # Get connection to the database with users table
+        user_db = get_supabase_pdp()
+        
+        # Initialize query to fetch users
+        user_query = user_db.table("users").select("id, email, username")
+        
+        # Get user_tenant relationships
+        user_tenant_query = user_db.table("user_tenant").select("id_user, tenant_id")
+        
+        # Get tenants, with optional filter by tenant_code
+        tenant_query = db.table("tenants").select("id, tenant_name, tenant_code, subdomain")
+        if tenant_code:
+            tenant_query = tenant_query.eq("tenant_code", tenant_code)
+            
+        # Execute all queries
+        users = user_query.execute().data
+        user_tenants = user_tenant_query.execute().data
+        tenants = tenant_query.execute().data
+        
+        # Perform the join in Python
+        result = []
+        for ut in user_tenants:
+            # Find matching user
+            user = next((u for u in users if u["id"] == ut["id_user"]), None)
+            # Find matching tenant
+            tenant = next((t for t in tenants if t["id"] == ut["tenant_id"]), None)
+            
+            if user and tenant:
+                # Create a combined record
+                user_dir = {
+                    "user_id": user["id"],
+                    "email": user["email"],
+                    "username": user["username"],
+                    "tenant_id": tenant["id"],
+                    "tenant_name": tenant["tenant_name"],
+                    "tenant_code": tenant["tenant_code"],
+                    "subdomain": tenant["subdomain"]
+                }
+                result.append(DataUserDir(**user_dir))
+                
+        return result
+    except Exception as e:
+        print(f"Error retrieving user directories: {e}")
+        raise ValueError("Failed to retrieve user directories. Please try again.")
 
 async def add_tenant(
     db: any,

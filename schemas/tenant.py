@@ -78,3 +78,13 @@ class DataUserMappingResponse(BaseModel):
     status: str
     code: int
     message: str
+
+
+class DataUserDir(BaseModel):
+    username:str
+    email:str
+    phone:str
+    tenant_name:str
+    created_at:str="08/11/2025"
+    updated_at:str="29/12/2025"
+
