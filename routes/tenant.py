@@ -44,9 +44,13 @@ router = APIRouter(tags=["Tenant"])
 )
 async def add_router(
     request: RegisTenantRequest, 
-    db: Client = Depends(get_supabase)
+    db: Client = Depends(get_supabase),
+    token: str = Depends(oauth2_scheme),
 ):
     try:
+        user = get_user_from_jwt_token(db, "user_tenant",token)
+        if not user:
+            return common_response(Unauthorized())
         data = await tenantRepo.add_tenant(db=db,payload=request)
         return common_response(
             Ok(
@@ -65,9 +69,13 @@ async def add_router(
     },
 )
 async def get_list_router(
-    db: Client = Depends(get_supabase)
+    db: Client = Depends(get_supabase),
+    token: str = Depends(oauth2_scheme),
 ):
     try:
+        user = get_user_from_jwt_token(db, "user_tenant",token)
+        if not user:
+            return common_response(Unauthorized())
         data = await tenantRepo.get_tenants(db=db)
         return common_response(
             Ok(
@@ -88,9 +96,13 @@ async def get_list_router(
 )
 async def add_service_router(
     tenant_code:str,
+    token: str = Depends(oauth2_scheme),
     db: Client = Depends(get_supabase)
 ):
     try:
+        user = get_user_from_jwt_token(db, "user_tenant",token)
+        if not user:
+            return common_response(Unauthorized())
         data = await tenantRepo.generate_service_yaml(db=db,tenant_code=tenant_code)
         return common_response(
             Ok(

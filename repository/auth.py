@@ -14,7 +14,7 @@ from datetime import datetime
 
 async def login(
     db:any,
-    subdomain:str,
+    # subdomain:str,
     request: LoginRequest,
 ):
     response = (
@@ -74,9 +74,18 @@ def check_user_password(
     email:str,
     password:str
 ):
-    response = db.table("users").select("*").eq("email",email).execute()
-    if password == "sigma":
-        return response.data[0]
+    response = (db.table("user_tenant")
+                .select("*")
+                .or_(f"email.eq.{email},username.eq.{email}")
+                ).execute()
+    print(response)
+    user_data = response.data[0]
+    generated_hash = validated_user_password(
+        user_data["password"],
+        password
+    )
+    if generated_hash:
+        return user_data
     else:
         raise ValueError("Invalid credentical")
 

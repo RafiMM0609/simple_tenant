@@ -59,7 +59,8 @@ async def login_route(
         subdomain = host.split(".")[0] if host else "unknown"
         print(f"Subdomain: {subdomain}")  # Log the subdomain
         
-        data = await authRepo.login(db=db, request=request, subdomain=subdomain)
+        # data = await authRepo.login(db=db, request=request, subdomain=subdomain)
+        data = await authRepo.login(db=db, request=request)
         token = await generate_jwt_token_from_user(user=data)
         return common_response(
             Ok(

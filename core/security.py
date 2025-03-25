@@ -53,8 +53,8 @@ def get_user_from_jwt_token(db: any, model: str, jwt_token: str) -> Optional[Typ
         payload = jwt.decode(token=jwt_token, key=SECRET_KEY, algorithms=ALGORITHM)
         if payload["exp"] < datetime.now().timestamp():
             return None
-        id = payload.get("id")
-        response = supabase.table(model).select("*").eq("id", id).execute()
+        user_id = payload.get("user_id")
+        response = db.table(model).select("*").eq("user_id", user_id).execute()
     except JWTError:
         return None
     except Exception as e:
